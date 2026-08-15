@@ -1,15 +1,21 @@
 import type { EmployeeShift } from "@/lib/types";
-import { getCentralParts } from "@/utils/date-ranges";
+import { getZonedParts, tashkentDeskShiftInCentral } from "@/utils/timezones";
 
 const SHIFT_LABELS: Record<EmployeeShift, string> = {
-  morning: "Morning · 06:00–14:00 CT",
   afternoon: "Afternoon · 14:00–22:00 CT",
   night: "Night · 22:00–06:00 CT",
   flexible: "Flexible · 09:00–17:00 CT",
+  morning: "Morning",
 };
 
-export function formatShift(shift: EmployeeShift | string | null | undefined): string {
+export function formatShift(
+  shift: EmployeeShift | string | null | undefined,
+): string {
   if (!shift) return "—";
+  if (shift === "morning") {
+    const { label } = tashkentDeskShiftInCentral();
+    return `Morning · ${label}`;
+  }
   return SHIFT_LABELS[shift as EmployeeShift] ?? shift;
 }
 
@@ -36,7 +42,7 @@ export function formatMinutes(value: number | null | undefined): string {
 
 /** Greeting based on America/Chicago clock hour. */
 export function greetingForNow(date = new Date()): string {
-  const { hour } = getCentralParts(date);
+  const { hour } = getZonedParts(date);
   if (hour < 12) return "Good morning";
   if (hour < 17) return "Good afternoon";
   return "Good evening";

@@ -1,5 +1,7 @@
-/** Business calendar timezone for DRAXIS Client (not browser local / Uzbekistan). */
-export const APP_TIMEZONE = "America/Chicago";
+import { BUSINESS_TIMEZONE } from "@/utils/timezones";
+
+/** Business calendar timezone for DRAXIS Client (metrics / date filters). */
+export const APP_TIMEZONE = BUSINESS_TIMEZONE;
 export const APP_TIMEZONE_LABEL = "Central Time";
 
 export type DatePreset = "day" | "week" | "month" | "year" | "custom";

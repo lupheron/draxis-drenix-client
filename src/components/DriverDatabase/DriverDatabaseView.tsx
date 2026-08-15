@@ -6,7 +6,7 @@ import ButtonDefault from "@/components/Button/ButtonDefault";
 import InputDefault from "@/components/FormItems/Input/InputDefault";
 import SelectDefault from "@/components/FormItems/Select/SelectDefault";
 import EmptyStateDefault from "@/components/UI/EmptyStateDefault";
-import SkeletonDefault from "@/components/UI/SkeletonDefault";
+import LoadingDefault from "@/components/UI/LoadingDefault";
 import {
   useMyDriverLeadSearch,
   useMyDriverLeadsBrowse,
@@ -32,6 +32,7 @@ const STATUS_OPTIONS: { value: DriverLeadStatusKey | ""; label: string }[] = [
   { value: "not_valid", label: "Not valid" },
   { value: "company_driver", label: "Company driver" },
   { value: "lease_driver", label: "Lease driver" },
+  { value: "terminated", label: "Terminated" },
 ];
 
 const STATUS_COLORS: Record<string, string> = {
@@ -43,6 +44,7 @@ const STATUS_COLORS: Record<string, string> = {
   not_valid: "#8a6a3d",
   company_driver: chartColors.teal,
   lease_driver: chartColors.slate,
+  terminated: "#7f1d1d",
 };
 
 type BrowseLayout = "table" | "cards";
@@ -90,6 +92,7 @@ function HistoryCard({ record }: { record: DriverLeadRecord }) {
   const columnEntries = Object.entries(record.columns ?? {}).filter(
     ([, value]) => value?.trim(),
   );
+  const statusFromProcess = record.status_source;
 
   return (
     <article className="animate-rise rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 shadow-[var(--shadow-soft)]">
@@ -99,6 +102,14 @@ function HistoryCard({ record }: { record: DriverLeadRecord }) {
           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
             {record.group_title} · {record.status}
           </p>
+          {statusFromProcess ? (
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              Status from {statusFromProcess.board_name}
+              {record.board_status
+                ? ` · board group was ${record.board_status}`
+                : null}
+            </p>
+          ) : null}
         </div>
         <StatusBadge statusKey={record.status_key} label={record.status} />
       </div>
@@ -256,6 +267,7 @@ export default function DriverDatabaseView() {
     isFetching: searchFetching,
     isError: searchError,
     error: searchErr,
+    refetch: refetchSearch,
   } = useMyDriverLeadSearch(searchParamsMemo, Boolean(searchSubmitted));
 
   const {
@@ -280,7 +292,20 @@ export default function DriverDatabaseView() {
     const phone = searchPhone.trim();
     const email = searchEmail.trim();
     if (!name && !phone && !email) return;
-    setSearchSubmitted({ name, phone, email });
+
+    const next = { name, phone, email };
+    const sameQuery =
+      searchSubmitted?.name === next.name &&
+      searchSubmitted?.phone === next.phone &&
+      searchSubmitted?.email === next.email;
+
+    setSearchSubmitted(next);
+
+    // Same fields keep the same query key, so a failed/empty result would
+    // otherwise stick. Refetch so Search always tries again on click.
+    if (sameQuery) {
+      void refetchSearch();
+    }
   }
 
   function clearSearch() {
@@ -368,14 +393,7 @@ export default function DriverDatabaseView() {
                 Enter at least one field and search to see full board history.
               </p>
             ) : searchLoading || searchFetching ? (
-              <div className="flex flex-col gap-3">
-                {Array.from({ length: 2 }).map((_, index) => (
-                  <SkeletonDefault
-                    key={index}
-                    className="skeleton-shimmer h-28 rounded-xl"
-                  />
-                ))}
-              </div>
+              <LoadingDefault label="Searching driver leads" />
             ) : searchErrorMessage ? (
               <p className="text-sm text-[var(--danger)]">{searchErrorMessage}</p>
             ) : searchData?.found === false ? (
@@ -452,14 +470,7 @@ export default function DriverDatabaseView() {
           </div>
 
           {browseLoading ? (
-            <div className="flex flex-col gap-3">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <SkeletonDefault
-                  key={index}
-                  className="skeleton-shimmer h-16 rounded-xl"
-                />
-              ))}
-            </div>
+            <LoadingDefault label="Loading driver leads" />
           ) : browseErrorMessage ? (
             <EmptyStateDefault
               title="Browse unavailable"

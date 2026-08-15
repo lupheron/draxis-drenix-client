@@ -22,6 +22,8 @@ export function useMyDriverLeadSearch(
     queryKey: queryKeys.driverLeadsSearch(company, params),
     queryFn: () => searchMyDriverLeads(params!),
     enabled: enabled && Boolean(params) && hasField,
+    staleTime: 0,
+    retry: 1,
   });
 }
 

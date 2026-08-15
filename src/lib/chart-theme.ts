@@ -1,24 +1,43 @@
 import type { ChartOptions } from "chart.js";
 
+/** High-contrast pairs: red/blue, orange/green, gold/navy. */
 export const chartColors = {
+  red: "#c1121f",
+  redSoft: "rgba(193, 18, 31, 0.16)",
+  blue: "#1d4ed8",
+  blueSoft: "rgba(29, 78, 216, 0.14)",
+  orange: "#ea580c",
+  orangeSoft: "rgba(234, 88, 12, 0.16)",
+  green: "#15803d",
+  greenSoft: "rgba(21, 128, 61, 0.14)",
+  gold: "#ca8a04",
+  goldSoft: "rgba(202, 138, 4, 0.16)",
+  navy: "#0f3d6e",
+  navySoft: "rgba(15, 61, 110, 0.12)",
   teal: "#1a6f66",
   tealSoft: "rgba(26, 111, 102, 0.14)",
-  slate: "#2f5d7c",
-  slateSoft: "rgba(47, 93, 124, 0.12)",
-  sand: "#8a6a3d",
-  sandSoft: "rgba(138, 106, 61, 0.12)",
-  green: "#067647",
-  greenSoft: "rgba(6, 118, 71, 0.12)",
+  slate: "#1d4ed8",
+  slateSoft: "rgba(29, 78, 216, 0.14)",
+  sand: "#ea580c",
+  sandSoft: "rgba(234, 88, 12, 0.16)",
   muted: "#6a7c89",
   grid: "rgba(180, 196, 207, 0.35)",
 };
+
+export const pipelinePalette = [
+  chartColors.orange,
+  chartColors.blue,
+  chartColors.green,
+  chartColors.gold,
+  chartColors.red,
+];
 
 const sharedPlugins = {
   legend: {
     labels: {
       color: "#415664",
       boxWidth: 10,
-        font: { size: 12, family: "Source Sans 3, sans-serif" },
+      font: { size: 12, family: "Source Sans 3, sans-serif" },
     },
   },
   tooltip: {

@@ -90,7 +90,8 @@ export type DriverLeadStatusKey =
   | "hired"
   | "not_valid"
   | "company_driver"
-  | "lease_driver";
+  | "lease_driver"
+  | "terminated";
 
 export type DriverLeadRecord = {
   id: number;
@@ -101,6 +102,15 @@ export type DriverLeadRecord = {
   email: string | null;
   status: string;
   status_key: DriverLeadStatusKey | string;
+  board_status?: string | null;
+  board_status_key?: string | null;
+  status_source?: {
+    board_name: string;
+    board_id?: string | null;
+    status: string;
+    status_key: string;
+    group_title?: string | null;
+  } | null;
   notes: string | null;
   platform: string | null;
   position: string | null;

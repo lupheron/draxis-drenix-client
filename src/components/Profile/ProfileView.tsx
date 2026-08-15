@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import ButtonDefault from "@/components/Button/ButtonDefault";
 import InputDefault from "@/components/FormItems/Input/InputDefault";
 import EmptyStateDefault from "@/components/UI/EmptyStateDefault";
-import SkeletonDefault from "@/components/UI/SkeletonDefault";
+import LoadingDefault from "@/components/UI/LoadingDefault";
 import { useChangePassword, useMyProfile } from "@/hooks/useAuth";
 import { ApiError } from "@/lib/api/client";
 import { authStorage } from "@/lib/auth-storage";
@@ -78,7 +78,7 @@ export default function ProfileView() {
       {view !== "security" ? (
         <>
           {profileQuery.isLoading && !employee ? (
-            <SkeletonDefault className="skeleton-shimmer h-48 rounded-2xl" />
+            <LoadingDefault label="Loading profile" />
           ) : employee ? (
             <section className="animate-rise grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)]/90 p-5 shadow-[var(--shadow-soft)] sm:grid-cols-2">
               <Field

@@ -27,14 +27,9 @@ export const PORTAL_NAV: NavItem[] = [
     label: "Performance",
     href: "/performance",
     children: [
-      { id: "trends", label: "Trends", href: "/performance" },
-      { id: "calls", label: "Calls", href: "/performance?view=calls" },
-      { id: "messages", label: "Messages", href: "/performance?view=messages" },
-      {
-        id: "pipeline",
-        label: "Pipeline",
-        href: "/performance?view=pipeline",
-      },
+      { id: "ringcentral", label: "RingCentral", href: "/performance" },
+      { id: "leads", label: "Leads", href: "/performance?view=leads" },
+      { id: "mixed", label: "Mixed", href: "/performance?view=mixed" },
     ],
   },
   {
@@ -42,13 +37,7 @@ export const PORTAL_NAV: NavItem[] = [
     label: "My Leads",
     href: "/leads",
     hrOnly: true,
-    children: [
-      { id: "all", label: "All", href: "/leads" },
-      { id: "follow_up", label: "Follow-ups", href: "/leads?status=follow_up" },
-      { id: "hired", label: "Hired", href: "/leads?status=hired" },
-      { id: "loaded", label: "Loaded", href: "/leads?status=loaded" },
-      { id: "new", label: "New", href: "/leads?status=new" },
-    ],
+    children: [{ id: "overview", label: "Overview", href: "/leads" }],
   },
   {
     id: "driver-database",
@@ -86,7 +75,7 @@ export function navForEmployee(isHr: boolean): NavItem[] {
       if (item.id === "performance" && !isHr) {
         return {
           ...item,
-          children: item.children.filter((child) => child.id !== "pipeline"),
+          children: item.children.filter((child) => child.id !== "leads"),
         };
       }
       return item;

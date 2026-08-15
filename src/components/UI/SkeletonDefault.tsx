@@ -1,9 +1,11 @@
 import { cn } from "@/lib/cn";
+import LoadingDefault from "@/components/UI/LoadingDefault";
 
 type SkeletonDefaultProps = {
   className?: string;
 };
 
+/** Thin shimmer block — prefer LoadingDefault for fetch states. */
 export default function SkeletonDefault({ className }: SkeletonDefaultProps) {
   return (
     <div
@@ -16,10 +18,5 @@ export default function SkeletonDefault({ className }: SkeletonDefaultProps) {
 }
 
 export function PageSpinner({ label = "Loading" }: { label?: string }) {
-  return (
-    <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border-strong)] border-t-[var(--accent)]" />
-      <p className="text-sm text-[var(--muted)]">{label}</p>
-    </div>
-  );
+  return <LoadingDefault variant="page" label={label} />;
 }

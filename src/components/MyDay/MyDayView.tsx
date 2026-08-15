@@ -18,8 +18,8 @@ import { useSearchParams } from "next/navigation";
 import AnimatedNumber from "@/components/UI/AnimatedNumber";
 import ChartPanel from "@/components/UI/ChartPanel";
 import EmptyStateDefault from "@/components/UI/EmptyStateDefault";
+import LoadingDefault from "@/components/UI/LoadingDefault";
 import { PeriodControls, usePeriodRange } from "@/components/UI/PeriodControls";
-import SkeletonDefault from "@/components/UI/SkeletonDefault";
 import StatCardDefault from "@/components/UI/StatCardDefault";
 import { useMyDailyMetrics, useMyMetrics } from "@/hooks/useAuth";
 import { ApiError } from "@/lib/api/client";
@@ -92,20 +92,22 @@ export default function MyDayView() {
       {
         label: "Calls",
         data: daily.map((row) => row.calls_made ?? 0),
-        borderColor: chartColors.teal,
-        backgroundColor: chartColors.tealSoft,
+        borderColor: chartColors.red,
+        backgroundColor: chartColors.redSoft,
         fill: true,
         tension: 0.35,
         pointRadius: 0,
+        borderWidth: 2.5,
       },
       {
         label: "Texts",
         data: daily.map((row) => row.messages_total ?? 0),
-        borderColor: chartColors.slate,
-        backgroundColor: chartColors.slateSoft,
+        borderColor: chartColors.blue,
+        backgroundColor: chartColors.blueSoft,
         fill: true,
         tension: 0.35,
         pointRadius: 0,
+        borderWidth: 2.5,
       },
     ],
   };
@@ -122,9 +124,9 @@ export default function MyDayView() {
           metrics?.messages_inbound ?? 0,
         ],
         backgroundColor: [
-          chartColors.teal,
-          chartColors.slate,
-          chartColors.sand,
+          chartColors.red,
+          chartColors.blue,
+          chartColors.orange,
           chartColors.green,
         ],
         borderRadius: 8,
@@ -144,11 +146,11 @@ export default function MyDayView() {
           metrics?.rejected ?? 0,
         ],
         backgroundColor: [
-          chartColors.teal,
-          chartColors.slate,
+          chartColors.orange,
+          chartColors.blue,
           chartColors.green,
-          chartColors.sand,
-          "#b42318",
+          chartColors.gold,
+          chartColors.red,
         ],
         borderWidth: 0,
       },
@@ -161,16 +163,17 @@ export default function MyDayView() {
       {
         label: "Talk minutes",
         data: daily.map((row) => row.minutes_on_call ?? 0),
-        borderColor: chartColors.teal,
-        backgroundColor: chartColors.tealSoft,
+        borderColor: chartColors.orange,
+        backgroundColor: chartColors.orangeSoft,
         fill: true,
         tension: 0.35,
         pointRadius: 0,
+        borderWidth: 2.5,
       },
       {
         label: "Texts total",
         data: daily.map((row) => row.messages_total ?? 0),
-        borderColor: chartColors.slate,
+        borderColor: chartColors.green,
         backgroundColor: "transparent",
         tension: 0.35,
         pointRadius: 2,
@@ -192,9 +195,8 @@ export default function MyDayView() {
                 formatPersonName(employee?.first_name, employee?.last_name)}
             </h1>
             <p className="mt-3 max-w-xl text-base leading-7 text-[var(--muted-foreground)]">
-              All numbers follow the Central Time date filter. Week = Mon→today
-              CT, month = 1st→today CT. Counts and minutes only — never message
-              content.
+              All clocks and date filters use Central Time. Counts and minutes
+              only — never message content.
             </p>
           </div>
 
@@ -240,14 +242,7 @@ export default function MyDayView() {
           description={errorMessage}
         />
       ) : loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <SkeletonDefault
-              key={index}
-              className="skeleton-shimmer h-32 rounded-2xl"
-            />
-          ))}
-        </div>
+        <LoadingDefault label="Loading your metrics" />
       ) : (
         <>
           {(view === "overview" || view === "charts") && (
@@ -256,7 +251,7 @@ export default function MyDayView() {
                 label="Calls"
                 value={<AnimatedNumber value={metrics?.calls_made ?? 0} />}
                 hint={periodLabel}
-                accent="teal"
+                accent="red"
                 style={{ animationDelay: "40ms" }}
               />
               <StatCardDefault
@@ -268,7 +263,7 @@ export default function MyDayView() {
                   />
                 }
                 hint={periodLabel}
-                accent="slate"
+                accent="blue"
                 style={{ animationDelay: "90ms" }}
               />
               <StatCardDefault
@@ -277,7 +272,7 @@ export default function MyDayView() {
                   <AnimatedNumber value={metrics?.messages_outbound ?? 0} />
                 }
                 hint={periodLabel}
-                accent="sand"
+                accent="orange"
                 style={{ animationDelay: "140ms" }}
               />
               <StatCardDefault
@@ -296,11 +291,11 @@ export default function MyDayView() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               {(
                 [
-                  ["Leads", metrics?.leads ?? 0, "teal"],
-                  ["Follow-ups", metrics?.follow_up ?? 0, "slate"],
+                  ["Leads", metrics?.leads ?? 0, "orange"],
+                  ["Follow-ups", metrics?.follow_up ?? 0, "blue"],
                   ["Hired", metrics?.hires ?? 0, "green"],
-                  ["Loaded", metrics?.loaded ?? 0, "sand"],
-                  ["Rejected", metrics?.rejected ?? 0, "teal"],
+                  ["Loaded", metrics?.loaded ?? 0, "gold"],
+                  ["Rejected", metrics?.rejected ?? 0, "red"],
                 ] as const
               ).map(([label, value, accent], index) => (
                 <StatCardDefault

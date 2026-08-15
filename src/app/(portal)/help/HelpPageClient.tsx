@@ -28,8 +28,8 @@ export default function HelpPageClient() {
           </h2>
           <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
             Ask Head HR or Head Safety to issue employee credentials. Use
-            Dashboard for your shift and counts, Performance for trends, and My
-            Leads if you are HR.
+            Dashboard for your shift and counts, Performance for RingCentral
+            and pipeline charts, and My Leads if you are HR.
           </p>
         </section>
       ) : (

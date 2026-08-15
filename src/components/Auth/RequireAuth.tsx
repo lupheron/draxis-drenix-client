@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PageSpinner } from "@/components/UI/SkeletonDefault";
+import LoadingDefault from "@/components/UI/LoadingDefault";
 import { authStorage } from "@/lib/auth-storage";
 
 type RequireAuthProps = {
@@ -38,7 +38,7 @@ export default function RequireAuth({
   }, [department, router]);
 
   if (!ready) {
-    return <PageSpinner label="Opening your workspace" />;
+    return <LoadingDefault variant="page" label="Opening your workspace" />;
   }
 
   return <>{children}</>;

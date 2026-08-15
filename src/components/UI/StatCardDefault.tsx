@@ -7,7 +7,15 @@ type StatCardDefaultProps = {
   hint?: string;
   className?: string;
   style?: CSSProperties;
-  accent?: "teal" | "slate" | "sand" | "green";
+  accent?:
+    | "teal"
+    | "slate"
+    | "sand"
+    | "green"
+    | "red"
+    | "blue"
+    | "orange"
+    | "gold";
 };
 
 const accents: Record<
@@ -20,19 +28,39 @@ const accents: Record<
     bar: "bg-[var(--accent)]",
   },
   slate: {
-    shell: "bg-[linear-gradient(145deg,#d7e7f2_0%,#f7fafc_55%)] border-[#9dbcd4]",
-    label: "text-[var(--ink-blue)]",
-    bar: "bg-[var(--ink-blue)]",
+    shell: "bg-[linear-gradient(145deg,#dbe7fb_0%,#f7fafc_55%)] border-[#93b4f0]",
+    label: "text-[#1d4ed8]",
+    bar: "bg-[#1d4ed8]",
   },
   sand: {
-    shell: "bg-[linear-gradient(145deg,#f5e8c7_0%,#f7fafc_55%)] border-[#ddc58a]",
-    label: "text-[var(--amber)]",
-    bar: "bg-[var(--amber)]",
+    shell: "bg-[linear-gradient(145deg,#fde7d6_0%,#f7fafc_55%)] border-[#f0b27a]",
+    label: "text-[#ea580c]",
+    bar: "bg-[#ea580c]",
   },
   green: {
     shell: "bg-[linear-gradient(145deg,#d8f3e5_0%,#f7fafc_55%)] border-[#8dceb0]",
-    label: "text-[var(--success)]",
-    bar: "bg-[var(--success)]",
+    label: "text-[#15803d]",
+    bar: "bg-[#15803d]",
+  },
+  red: {
+    shell: "bg-[linear-gradient(145deg,#fde2e4_0%,#f7fafc_55%)] border-[#e7a0a6]",
+    label: "text-[#c1121f]",
+    bar: "bg-[#c1121f]",
+  },
+  blue: {
+    shell: "bg-[linear-gradient(145deg,#dbe7fb_0%,#f7fafc_55%)] border-[#93b4f0]",
+    label: "text-[#1d4ed8]",
+    bar: "bg-[#1d4ed8]",
+  },
+  orange: {
+    shell: "bg-[linear-gradient(145deg,#fde7d6_0%,#f7fafc_55%)] border-[#f0b27a]",
+    label: "text-[#ea580c]",
+    bar: "bg-[#ea580c]",
+  },
+  gold: {
+    shell: "bg-[linear-gradient(145deg,#f8ecc4_0%,#f7fafc_55%)] border-[#e0c36a]",
+    label: "text-[#ca8a04]",
+    bar: "bg-[#ca8a04]",
   },
 };
 
