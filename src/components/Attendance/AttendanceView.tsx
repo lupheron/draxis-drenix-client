@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import ButtonDefault from "@/components/Button/ButtonDefault";
 import InputDefault from "@/components/FormItems/Input/InputDefault";
@@ -70,6 +70,8 @@ export default function AttendanceView() {
   const summary = summaryQuery.data;
   const periodLabel = PERIOD_LABELS[period];
   const zoneHint = attendanceClockZoneLabel(clockZone);
+  const rightColumnRef = useRef<HTMLDivElement>(null);
+  const [daysPanelHeight, setDaysPanelHeight] = useState<number | null>(null);
 
   useEffect(() => {
     if (!selectedDate && days.length > 0) {
@@ -84,6 +86,30 @@ export default function AttendanceView() {
 
   const selectedDay: AttendanceDay | null =
     dayQuery.data ?? selectedFromList ?? null;
+
+  useEffect(() => {
+    const el = rightColumnRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+
+    const syncHeight = () => {
+      const desktop = window.matchMedia("(min-width: 1280px)").matches;
+      if (!desktop) {
+        setDaysPanelHeight(null);
+        return;
+      }
+      const next = Math.round(el.getBoundingClientRect().height);
+      setDaysPanelHeight(next > 0 ? next : null);
+    };
+
+    syncHeight();
+    const observer = new ResizeObserver(syncHeight);
+    observer.observe(el);
+    window.addEventListener("resize", syncHeight);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", syncHeight);
+    };
+  }, [selectedDay, view, clockZone]);
 
   const listError =
     daysQuery.error instanceof ApiError
@@ -146,9 +172,9 @@ export default function AttendanceView() {
           Your clock record
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--muted-foreground)]">
-          Face ID lives in Tashkent. Shifts often run evening → next morning
-          (e.g. 6:00 PM → 3:00 AM). Each row is a shift date — overnight outs
-          still belong to the day you started.
+          Face ID is Tashkent; logistics is US Central. Each row is a Shift Date
+          from the sheet (overnight 6:00 PM → 3:00 AM stays on the start day).
+          Toggle clocks below — dates stay on Shift Date.
         </p>
       </section>
 
@@ -156,10 +182,10 @@ export default function AttendanceView() {
         <div className="mb-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-blue)]">
-              Date filter · shift dates
+              Shift Date filter
             </p>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              {range.from} → {range.to} · clocks shown as {zoneHint}
+              {range.from} → {range.to} · clocks as {zoneHint}
             </p>
           </div>
           <ClockZoneToggle value={clockZone} onChange={setClockZone} />
@@ -220,9 +246,16 @@ export default function AttendanceView() {
           }
         />
       ) : (
-        <div className="grid gap-5 xl:grid-cols-5">
-          <section className="xl:col-span-3 animate-rise rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]/90 shadow-[var(--shadow-soft)]">
-            <header className="border-b border-[var(--border)] px-5 py-4">
+        <div className="grid gap-5 xl:grid-cols-5 xl:items-start">
+          <section
+            className="xl:col-span-3 flex min-h-0 flex-col overflow-hidden animate-rise rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]/90 shadow-[var(--shadow-soft)] max-xl:max-h-[min(28rem,70vh)]"
+            style={
+              daysPanelHeight
+                ? { height: daysPanelHeight, maxHeight: daysPanelHeight }
+                : undefined
+            }
+          >
+            <header className="shrink-0 border-b border-[var(--border)] px-5 py-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]">
@@ -236,77 +269,88 @@ export default function AttendanceView() {
               </div>
             </header>
 
-            {listError ? (
-              <div className="p-5">
-                <EmptyStateDefault
-                  title="Days unavailable"
-                  description={listError}
-                />
-              </div>
-            ) : daysQuery.isLoading ? (
-              <div className="p-5">
-                <LoadingDefault label="Loading days" />
-              </div>
-            ) : days.length === 0 ? (
-              <div className="p-5">
-                <EmptyStateDefault
-                  title="No days in range"
-                  description="Sheet sync may not have rows for this window yet."
-                />
-              </div>
-            ) : (
-              <ul className="divide-y divide-[var(--border)]">
-                {days.map((day) => {
-                  const tone = attendanceStatusTone(
-                    day.status,
-                    day.late_minutes,
-                  );
-                  const active = day.date === selectedDate;
-                  return (
-                    <li key={day.id}>
-                      <button
-                        type="button"
-                        onClick={() => selectDay(day)}
-                        className={cn(
-                          "flex w-full items-center gap-4 px-5 py-3.5 text-left transition-colors",
-                          active
-                            ? "bg-[var(--accent-dim)]"
-                            : "hover:bg-[var(--surface)]",
-                        )}
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-[var(--foreground)]">
-                            {formatAttendanceDate(day.date)}
-                          </p>
-                          <p className="mt-0.5 text-sm text-[var(--muted-foreground)]">
-                            In{" "}
-                            {formatAttendanceTime(day.check_in_at, clockZone)} ·
-                            Out{" "}
-                            {formatAttendanceTime(day.check_out_at, clockZone)}
-                            {day.late_minutes > 0
-                              ? ` · ${day.late_minutes}m late`
-                              : ""}
-                          </p>
-                        </div>
-                        <span
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              {listError ? (
+                <div className="p-5">
+                  <EmptyStateDefault
+                    title="Days unavailable"
+                    description={listError}
+                  />
+                </div>
+              ) : daysQuery.isLoading ? (
+                <div className="p-5">
+                  <LoadingDefault label="Loading days" />
+                </div>
+              ) : days.length === 0 ? (
+                <div className="p-5">
+                  <EmptyStateDefault
+                    title="No days in range"
+                    description="Sheet sync may not have rows for this window yet."
+                  />
+                </div>
+              ) : (
+                <ul className="divide-y divide-[var(--border)]">
+                  {days.map((day) => {
+                    const tone = attendanceStatusTone(
+                      day.status,
+                      day.late_minutes,
+                    );
+                    const active = day.date === selectedDate;
+                    return (
+                      <li key={day.id}>
+                        <button
+                          type="button"
+                          onClick={() => selectDay(day)}
                           className={cn(
-                            "shrink-0 rounded-md border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.08em]",
-                            tone.bg,
-                            tone.text,
-                            tone.border,
+                            "flex w-full items-center gap-4 px-5 py-3.5 text-left transition-colors",
+                            active
+                              ? "bg-[var(--accent-dim)]"
+                              : "hover:bg-[var(--surface)]",
                           )}
                         >
-                          {attendanceStatusLabel(day.status, day.late_minutes)}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-[var(--foreground)]">
+                              {formatAttendanceDate(day.date)}
+                            </p>
+                            <p className="mt-0.5 text-sm text-[var(--muted-foreground)]">
+                              In{" "}
+                              {formatAttendanceTime(day.check_in_at, clockZone)}{" "}
+                              · Out{" "}
+                              {formatAttendanceTime(
+                                day.check_out_at,
+                                clockZone,
+                              )}
+                              {day.late_minutes > 0
+                                ? ` · ${day.late_minutes}m late`
+                                : ""}
+                            </p>
+                          </div>
+                          <span
+                            className={cn(
+                              "shrink-0 rounded-md border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.08em]",
+                              tone.bg,
+                              tone.text,
+                              tone.border,
+                            )}
+                          >
+                            {attendanceStatusLabel(
+                              day.status,
+                              day.late_minutes,
+                            )}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           </section>
 
-          <div className="xl:col-span-2 flex flex-col gap-5">
+          <div
+            ref={rightColumnRef}
+            className="xl:col-span-2 flex flex-col gap-5"
+          >
             <DayDetailPanel
               day={selectedDay}
               clockZone={clockZone}

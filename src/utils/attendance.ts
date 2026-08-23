@@ -1,51 +1,28 @@
 import type { AttendanceStatus } from "@/lib/types";
-import {
-  BUSINESS_TIMEZONE,
-  DESK_TIMEZONE,
-  getZonedParts,
-  zonedWallTimeToUtc,
-} from "@/utils/timezones";
+import { BUSINESS_TIMEZONE, DESK_TIMEZONE } from "@/utils/timezones";
 
 /** How punch clocks are shown in the Client Portal. */
 export type AttendanceClockZone = "tashkent" | "central";
 
 /**
- * Sheet "Time Local" is Face ID wall time at the Tashkent desk.
- * Sync currently parses that wall clock as America/Chicago, so formatting
- * the stored ISO in Chicago reproduces the Face ID / Tashkent digits.
- * US Central view reinterprets those digits as Asia/Tashkent, then formats CT.
+ * Format attendance punch times.
+ * Backend stores occurred_at / check_* as real UTC (Time Local parsed as Asia/Tashkent).
+ * Toggle only changes the display zone — Shift Date labels stay as sheet shift dates.
  */
 export function formatAttendanceTime(
   value: string | null | undefined,
   zone: AttendanceClockZone = "tashkent",
 ): string {
   if (!value) return "—";
-  const stored = new Date(value);
-  if (Number.isNaN(stored.getTime())) return "—";
-
-  const display =
-    zone === "tashkent"
-      ? stored
-      : sheetWallAsTashkentToCentralInstant(stored);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
 
   return new Intl.DateTimeFormat("en-US", {
-    timeZone: BUSINESS_TIMEZONE,
+    timeZone: zone === "tashkent" ? DESK_TIMEZONE : BUSINESS_TIMEZONE,
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
-  }).format(display);
-}
-
-function sheetWallAsTashkentToCentralInstant(stored: Date): Date {
-  const wall = getZonedParts(stored, BUSINESS_TIMEZONE);
-  return zonedWallTimeToUtc(
-    DESK_TIMEZONE,
-    wall.year,
-    wall.month,
-    wall.day,
-    wall.hour,
-    wall.minute,
-  );
+  }).format(date);
 }
 
 export function attendanceClockZoneLabel(zone: AttendanceClockZone): string {
@@ -53,9 +30,9 @@ export function attendanceClockZoneLabel(zone: AttendanceClockZone): string {
 }
 
 /**
- * Day list / badges: never surface "break".
- * Break means they punched in (and took a break) — show Checked in.
- * Late / no-show / excused / pending keep their meaning.
+ * Day badges: never surface "break".
+ * Break is an event type only — map to Checked in (matches Admin).
+ * Late when status is late OR late_minutes > 0 (unless excused / no_show).
  */
 export function attendanceDisplayStatus(
   status: AttendanceStatus | string | null | undefined,
@@ -63,10 +40,13 @@ export function attendanceDisplayStatus(
 ): string {
   if (!status) return "pending_review";
   if (status === "no_show") return "no_show";
-  if (status === "late" || (lateMinutes > 0 && status !== "excused")) {
-    return "late";
-  }
-  if (status === "break" || status === "missing_punch" || status === "present") {
+  if (status === "excused") return "excused";
+  if (status === "late" || lateMinutes > 0) return "late";
+  if (
+    status === "break" ||
+    status === "missing_punch" ||
+    status === "present"
+  ) {
     return "present";
   }
   return status;
@@ -134,6 +114,7 @@ export function attendanceStatusTone(
   }
 }
 
+/** Shift Date label (sheet column F) — not recomputed from US midnight. */
 export function formatAttendanceDate(value: string | null | undefined): string {
   if (!value) return "—";
   const [year, month, day] = value.split("-").map(Number);
@@ -147,15 +128,22 @@ export function formatAttendanceDate(value: string | null | undefined): string {
   }).format(date);
 }
 
-/** Punches shown in Client Portal day detail (no break noise). */
-export function isAttendanceCheckPunch(type: string | null | undefined): boolean {
+/** Employee day detail: check-in / check-out only (breaks stay on Admin). */
+export function isAttendanceCheckPunch(
+  type: string | null | undefined,
+): boolean {
   const t = String(type ?? "").toLowerCase();
-  return t === "check_in" || t === "check_out";
+  return (
+    t === "check_in" ||
+    t === "check_out" ||
+    t === "checked_in" ||
+    t === "checked_out"
+  );
 }
 
 export function attendancePunchLabel(type: string | null | undefined): string {
   const t = String(type ?? "").toLowerCase();
-  if (t === "check_in") return "Check in";
-  if (t === "check_out") return "Check out";
+  if (t === "check_in" || t === "checked_in") return "Check in";
+  if (t === "check_out" || t === "checked_out") return "Check out";
   return String(type ?? "Punch").replaceAll("_", " ");
 }
