@@ -50,7 +50,8 @@ function pad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-function zonedWallTimeToUtc(
+/** Build a UTC Date from a civil wall-clock in `timeZone`. */
+export function zonedWallTimeToUtc(
   timeZone: string,
   year: number,
   month: number,

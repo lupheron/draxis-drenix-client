@@ -24,7 +24,10 @@ export default function AttendanceSummaryCard({
 }: AttendanceSummaryCardProps) {
   const summaryQuery = useMyAttendanceSummary(from, to);
   const summary = summaryQuery.data;
-  const todayTone = attendanceStatusTone(summary?.today.status);
+  const todayTone = attendanceStatusTone(
+    summary?.today.status,
+    summary?.today.late_minutes ?? 0,
+  );
 
   const errorMessage =
     summaryQuery.error instanceof ApiError
@@ -38,13 +41,13 @@ export default function AttendanceSummaryCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-blue)]">
-            Attendance · Central Time
+            Attendance · Tashkent Face ID
           </p>
           <h2 className="mt-1 font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
             Clock status
           </h2>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            Today + {periodLabel.toLowerCase()} from HikVision sheet sync
+            Today + {periodLabel.toLowerCase()} · overnight shifts OK
           </p>
         </div>
         <Link
@@ -84,11 +87,14 @@ export default function AttendanceSummaryCard({
                 todayTone.text,
               )}
             >
-              {attendanceStatusLabel(summary.today.status)}
+              {attendanceStatusLabel(
+                summary.today.status,
+                summary.today.late_minutes,
+              )}
             </p>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              In {formatAttendanceTime(summary.today.check_in_at)} · Out{" "}
-              {formatAttendanceTime(summary.today.check_out_at)}
+              In {formatAttendanceTime(summary.today.check_in_at, "tashkent")} ·
+              Out {formatAttendanceTime(summary.today.check_out_at, "tashkent")}
               {summary.today.late_minutes > 0
                 ? ` · ${summary.today.late_minutes}m late`
                 : ""}
@@ -96,8 +102,10 @@ export default function AttendanceSummaryCard({
           </div>
 
           <MiniStat
-            label="Present"
-            value={summary.period.present_days}
+            label="Checked in"
+            value={
+              summary.period.present_days + summary.period.break_days
+            }
             hint={periodLabel}
           />
           <MiniStat

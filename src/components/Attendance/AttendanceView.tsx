@@ -24,10 +24,14 @@ import type {
   AttendanceSummary,
 } from "@/lib/types";
 import {
+  attendanceClockZoneLabel,
+  attendancePunchLabel,
   attendanceStatusLabel,
   attendanceStatusTone,
   formatAttendanceDate,
   formatAttendanceTime,
+  isAttendanceCheckPunch,
+  type AttendanceClockZone,
 } from "@/utils/attendance";
 import { formatDateInCentral } from "@/utils/date-ranges";
 
@@ -46,6 +50,7 @@ export default function AttendanceView() {
     usePeriodRange("month");
 
   const today = formatDateInCentral();
+  const [clockZone, setClockZone] = useState<AttendanceClockZone>("tashkent");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [requestType, setRequestType] =
     useState<AttendanceRequestType>("dispute");
@@ -64,6 +69,7 @@ export default function AttendanceView() {
   const requests = requestsQuery.data ?? [];
   const summary = summaryQuery.data;
   const periodLabel = PERIOD_LABELS[period];
+  const zoneHint = attendanceClockZoneLabel(clockZone);
 
   useEffect(() => {
     if (!selectedDate && days.length > 0) {
@@ -134,25 +140,29 @@ export default function AttendanceView() {
     <div className="flex flex-col gap-7">
       <section className="relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[linear-gradient(135deg,#d7e7f2_0%,#d5f0eb_48%,#f5e8c7_100%)] p-6 shadow-[var(--shadow-soft)] sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--ink-blue)]">
-          Attendance · America/Chicago
+          Attendance · Desk in Tashkent · Logistics in US Central
         </p>
         <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight text-[var(--foreground)] sm:text-5xl">
           Your clock record
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--muted-foreground)]">
-          Synced from the HikVision Google Sheet. Dispute a punch or report an
-          absence — HR reviews every request.
+          Face ID lives in Tashkent. Shifts often run evening → next morning
+          (e.g. 6:00 PM → 3:00 AM). Each row is a shift date — overnight outs
+          still belong to the day you started.
         </p>
       </section>
 
       <section className="animate-rise rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]/90 p-4 shadow-[var(--shadow-soft)] sm:p-5">
-        <div className="mb-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-blue)]">
-            Date filter · Central Time
-          </p>
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            {range.from} → {range.to}
-          </p>
+        <div className="mb-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-blue)]">
+              Date filter · shift dates
+            </p>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              {range.from} → {range.to} · clocks shown as {zoneHint}
+            </p>
+          </div>
+          <ClockZoneToggle value={clockZone} onChange={setClockZone} />
         </div>
         <PeriodControls
           period={period}
@@ -175,10 +185,10 @@ export default function AttendanceView() {
         />
       ) : summary ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <TodayCard summary={summary} />
+          <TodayCard summary={summary} clockZone={clockZone} />
           <PeriodStat
-            label="Present"
-            value={summary.period.present_days}
+            label="Checked in"
+            value={summary.period.present_days + summary.period.break_days}
             hint={periodLabel}
             accent="green"
           />
@@ -213,12 +223,17 @@ export default function AttendanceView() {
         <div className="grid gap-5 xl:grid-cols-5">
           <section className="xl:col-span-3 animate-rise rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]/90 shadow-[var(--shadow-soft)]">
             <header className="border-b border-[var(--border)] px-5 py-4">
-              <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]">
-                Days
-              </h2>
-              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                Select a day for punches and to start a dispute
-              </p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]">
+                    Days
+                  </h2>
+                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                    Checked in or Late only · times in {zoneHint}
+                  </p>
+                </div>
+                <ClockZoneToggle value={clockZone} onChange={setClockZone} />
+              </div>
             </header>
 
             {listError ? (
@@ -242,7 +257,10 @@ export default function AttendanceView() {
             ) : (
               <ul className="divide-y divide-[var(--border)]">
                 {days.map((day) => {
-                  const tone = attendanceStatusTone(day.status);
+                  const tone = attendanceStatusTone(
+                    day.status,
+                    day.late_minutes,
+                  );
                   const active = day.date === selectedDate;
                   return (
                     <li key={day.id}>
@@ -261,8 +279,10 @@ export default function AttendanceView() {
                             {formatAttendanceDate(day.date)}
                           </p>
                           <p className="mt-0.5 text-sm text-[var(--muted-foreground)]">
-                            In {formatAttendanceTime(day.check_in_at)} · Out{" "}
-                            {formatAttendanceTime(day.check_out_at)}
+                            In{" "}
+                            {formatAttendanceTime(day.check_in_at, clockZone)} ·
+                            Out{" "}
+                            {formatAttendanceTime(day.check_out_at, clockZone)}
                             {day.late_minutes > 0
                               ? ` · ${day.late_minutes}m late`
                               : ""}
@@ -276,7 +296,7 @@ export default function AttendanceView() {
                             tone.border,
                           )}
                         >
-                          {attendanceStatusLabel(day.status)}
+                          {attendanceStatusLabel(day.status, day.late_minutes)}
                         </span>
                       </button>
                     </li>
@@ -289,7 +309,12 @@ export default function AttendanceView() {
           <div className="xl:col-span-2 flex flex-col gap-5">
             <DayDetailPanel
               day={selectedDay}
-              loading={Boolean(selectedDate) && dayQuery.isLoading && !selectedFromList}
+              clockZone={clockZone}
+              loading={
+                Boolean(selectedDate) &&
+                dayQuery.isLoading &&
+                !selectedFromList
+              }
               notFound={
                 Boolean(selectedDate) &&
                 dayQuery.isError &&
@@ -331,8 +356,57 @@ export default function AttendanceView() {
   );
 }
 
-function TodayCard({ summary }: { summary: AttendanceSummary }) {
-  const tone = attendanceStatusTone(summary.today.status);
+function ClockZoneToggle({
+  value,
+  onChange,
+}: {
+  value: AttendanceClockZone;
+  onChange: (zone: AttendanceClockZone) => void;
+}) {
+  return (
+    <div
+      className="inline-flex rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] p-1"
+      role="group"
+      aria-label="Clock timezone"
+    >
+      {(
+        [
+          ["tashkent", "Tashkent"],
+          ["central", "US Central"],
+        ] as const
+      ).map(([zone, label]) => {
+        const active = value === zone;
+        return (
+          <button
+            key={zone}
+            type="button"
+            onClick={() => onChange(zone)}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.1em] transition-colors",
+              active
+                ? "bg-[var(--accent)] text-white"
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]",
+            )}
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function TodayCard({
+  summary,
+  clockZone,
+}: {
+  summary: AttendanceSummary;
+  clockZone: AttendanceClockZone;
+}) {
+  const tone = attendanceStatusTone(
+    summary.today.status,
+    summary.today.late_minutes,
+  );
   return (
     <div
       className={cn(
@@ -355,11 +429,14 @@ function TodayCard({ summary }: { summary: AttendanceSummary }) {
           tone.text,
         )}
       >
-        {attendanceStatusLabel(summary.today.status)}
+        {attendanceStatusLabel(
+          summary.today.status,
+          summary.today.late_minutes,
+        )}
       </p>
       <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-        In {formatAttendanceTime(summary.today.check_in_at)} · Out{" "}
-        {formatAttendanceTime(summary.today.check_out_at)}
+        In {formatAttendanceTime(summary.today.check_in_at, clockZone)} · Out{" "}
+        {formatAttendanceTime(summary.today.check_out_at, clockZone)}
       </p>
       {summary.today.notes ? (
         <p className="mt-2 text-sm text-[var(--muted-foreground)]">
@@ -382,8 +459,10 @@ function PeriodStat({
   accent: "green" | "orange" | "blue";
 }) {
   const shells = {
-    green: "border-[#8dceb0] bg-[linear-gradient(145deg,#d8f3e5_0%,#f7fafc_55%)]",
-    orange: "border-[#f0b27a] bg-[linear-gradient(145deg,#fde7d6_0%,#f7fafc_55%)]",
+    green:
+      "border-[#8dceb0] bg-[linear-gradient(145deg,#d8f3e5_0%,#f7fafc_55%)]",
+    orange:
+      "border-[#f0b27a] bg-[linear-gradient(145deg,#fde7d6_0%,#f7fafc_55%)]",
     blue: "border-[#93b4f0] bg-[linear-gradient(145deg,#dbe7fb_0%,#f7fafc_55%)]",
   };
   return (
@@ -406,10 +485,12 @@ function PeriodStat({
 
 function DayDetailPanel({
   day,
+  clockZone,
   loading,
   notFound,
 }: {
   day: AttendanceDay | null;
+  clockZone: AttendanceClockZone;
   loading: boolean;
   notFound: boolean;
 }) {
@@ -426,21 +507,23 @@ function DayDetailPanel({
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]/90 p-5 shadow-[var(--shadow-soft)]">
         <EmptyStateDefault
           title="Select a day"
-          description="Pick a day from the list to see punches and notes."
+          description="Pick a day from the list to see check-in / check-out."
         />
       </section>
     );
   }
 
-  const tone = attendanceStatusTone(day.status);
-  const events = day.events ?? [];
+  const tone = attendanceStatusTone(day.status, day.late_minutes);
+  const punches = (day.events ?? []).filter((event) =>
+    isAttendanceCheckPunch(event.type),
+  );
 
   return (
     <section className="animate-rise rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]/90 p-5 shadow-[var(--shadow-soft)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-            Day detail
+            Day detail · {attendanceClockZoneLabel(clockZone)}
           </p>
           <h3 className="mt-1 font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]">
             {formatAttendanceDate(day.date)}
@@ -454,55 +537,66 @@ function DayDetailPanel({
             tone.border,
           )}
         >
-          {attendanceStatusLabel(day.status)}
+          {attendanceStatusLabel(day.status, day.late_minutes)}
         </span>
       </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-        <DetailItem label="Check in" value={formatAttendanceTime(day.check_in_at)} />
-        <DetailItem label="Check out" value={formatAttendanceTime(day.check_out_at)} />
-        <DetailItem label="Break" value={formatAttendanceTime(day.break_at)} />
+        <DetailItem
+          label="Check in"
+          value={formatAttendanceTime(day.check_in_at, clockZone)}
+        />
+        <DetailItem
+          label="Check out"
+          value={formatAttendanceTime(day.check_out_at, clockZone)}
+        />
         <DetailItem
           label="Late"
           value={day.late_minutes > 0 ? `${day.late_minutes} min` : "—"}
         />
-        <DetailItem label="Shift start" value={day.shift_start || "—"} />
-        <DetailItem label="Shift end" value={day.shift_end || "—"} />
+        <DetailItem
+          label="Shift window"
+          value={day.shift_start || day.shift_end || "—"}
+        />
       </dl>
 
       {(day.sheet_note || day.admin_note) && (
         <div className="mt-4 space-y-2 text-sm">
           {day.sheet_note ? (
             <p className="text-[var(--muted-foreground)]">
-              <span className="font-medium text-[var(--foreground)]">Sheet: </span>
+              <span className="font-medium text-[var(--foreground)]">
+                Sheet:{" "}
+              </span>
               {day.sheet_note}
             </p>
           ) : null}
           {day.admin_note ? (
             <p className="text-[var(--muted-foreground)]">
-              <span className="font-medium text-[var(--foreground)]">Admin: </span>
+              <span className="font-medium text-[var(--foreground)]">
+                Admin:{" "}
+              </span>
               {day.admin_note}
             </p>
           ) : null}
         </div>
       )}
 
-      {events.length > 0 ? (
+      {punches.length > 0 ? (
         <div className="mt-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
-            Punches
+            Check in / out
           </p>
           <ul className="mt-2 space-y-1.5">
-            {events.map((event) => (
+            {punches.map((event) => (
               <li
                 key={event.id}
                 className="flex items-center justify-between rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm"
               >
-                <span className="capitalize text-[var(--foreground)]">
-                  {String(event.type).replaceAll("_", " ")}
+                <span className="text-[var(--foreground)]">
+                  {attendancePunchLabel(event.type)}
                 </span>
                 <span className="text-[var(--muted-foreground)]">
-                  {formatAttendanceTime(event.occurred_at)}
+                  {formatAttendanceTime(event.occurred_at, clockZone)}
                 </span>
               </li>
             ))}
