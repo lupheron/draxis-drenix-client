@@ -2,7 +2,6 @@ import { apiRequest } from "@/lib/api/client";
 import type {
   ApiEnvelope,
   ClientEmployee,
-  ClientLead,
   DailyMetric,
   MeMetricsResponse,
 } from "@/lib/types";
@@ -28,16 +27,6 @@ export async function fetchMyDailyMetrics(
 ): Promise<DailyMetric[]> {
   const response = await apiRequest<ApiEnvelope<DailyMetric[]>>(
     `/me/metrics/daily?from=${from}&to=${to}`,
-  );
-  return response.data;
-}
-
-export async function fetchMyLeads(
-  from: string,
-  to: string,
-): Promise<ClientLead[]> {
-  const response = await apiRequest<ApiEnvelope<ClientLead[]>>(
-    `/me/leads?from=${from}&to=${to}`,
   );
   return response.data;
 }

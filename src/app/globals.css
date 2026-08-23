@@ -15,8 +15,6 @@
   --accent-dim: #dfe8ef;
   --ink-blue: #1e4d6b;
   --ink-blue-soft: #d7e7f2;
-  --amber: #9a6700;
-  --amber-soft: #f5e8c7;
   --danger: #b42318;
   --danger-soft: #fde8e6;
   --success: #0f7a4c;
@@ -101,46 +99,6 @@ a {
   }
 }
 
-@keyframes drawer-in {
-  from {
-    transform: translateX(24px);
-    opacity: 0.6;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes pulse-soft {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(15, 118, 110, 0.28);
-  }
-  50% {
-    box-shadow: 0 0 0 10px rgba(15, 118, 110, 0);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-@keyframes float-y {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
 .animate-fade-in {
   animation: fade-in 480ms ease-out both;
 }
@@ -151,27 +109,4 @@ a {
 
 .animate-page-in {
   animation: page-in 420ms ease-out both;
-}
-
-.animate-drawer-in {
-  animation: drawer-in 280ms ease-out both;
-}
-
-.animate-pulse-soft {
-  animation: pulse-soft 2.4s ease-out infinite;
-}
-
-.animate-float {
-  animation: float-y 4s ease-in-out infinite;
-}
-
-.skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--border) 70%, white) 0%,
-    color-mix(in srgb, var(--accent-soft) 80%, white) 50%,
-    color-mix(in srgb, var(--border) 70%, white) 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.4s linear infinite;
 }

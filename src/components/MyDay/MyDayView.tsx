@@ -15,6 +15,7 @@ import {
 import { useEffect, useState } from "react";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import { useSearchParams } from "next/navigation";
+import AttendanceSummaryCard from "@/components/Attendance/AttendanceSummaryCard";
 import AnimatedNumber from "@/components/UI/AnimatedNumber";
 import ChartPanel from "@/components/UI/ChartPanel";
 import EmptyStateDefault from "@/components/UI/EmptyStateDefault";
@@ -235,6 +236,14 @@ export default function MyDayView() {
           onCustomChange={setCustom}
         />
       </section>
+
+      {view === "overview" ? (
+        <AttendanceSummaryCard
+          from={range.from}
+          to={range.to}
+          periodLabel={periodLabel}
+        />
+      ) : null}
 
       {errorMessage ? (
         <EmptyStateDefault

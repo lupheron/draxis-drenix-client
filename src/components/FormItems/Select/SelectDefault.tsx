@@ -8,16 +8,12 @@ type SelectOption = {
 
 type SelectDefaultProps = {
   label?: string;
-  hint?: string;
-  error?: string;
   options: SelectOption[];
   wrapperClassName?: string;
 } & SelectHTMLAttributes<HTMLSelectElement>;
 
 export default function SelectDefault({
   label,
-  hint,
-  error,
   options,
   wrapperClassName,
   className,
@@ -41,7 +37,6 @@ export default function SelectDefault({
         id={selectId}
         className={cn(
           "h-11 w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] outline-none transition-colors focus:border-[var(--accent)] focus:bg-[var(--surface-elevated)]",
-          error ? "border-[var(--danger)]" : undefined,
           className,
         )}
         {...props}
@@ -52,12 +47,6 @@ export default function SelectDefault({
           </option>
         ))}
       </select>
-
-      {error ? (
-        <p className="text-xs text-[var(--danger)]">{error}</p>
-      ) : hint ? (
-        <p className="text-xs text-[var(--muted)]">{hint}</p>
-      ) : null}
     </div>
   );
 }

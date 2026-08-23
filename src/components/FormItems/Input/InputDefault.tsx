@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode } from "react";
+import type { InputHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
 type InputDefaultProps = {
@@ -6,8 +6,6 @@ type InputDefaultProps = {
   hint?: string;
   error?: string;
   wrapperClassName?: string;
-  leftSlot?: ReactNode;
-  rightSlot?: ReactNode;
 } & InputHTMLAttributes<HTMLInputElement>;
 
 export default function InputDefault({
@@ -15,8 +13,6 @@ export default function InputDefault({
   hint,
   error,
   wrapperClassName,
-  leftSlot,
-  rightSlot,
   className,
   id,
   ...props
@@ -34,31 +30,15 @@ export default function InputDefault({
         </label>
       ) : null}
 
-      <div className="relative">
-        {leftSlot ? (
-          <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]">
-            {leftSlot}
-          </div>
-        ) : null}
-
-        <input
-          id={inputId}
-          className={cn(
-            "h-11 w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:bg-[var(--surface-elevated)]",
-            leftSlot ? "pl-10" : undefined,
-            rightSlot ? "pr-10" : undefined,
-            error ? "border-[var(--danger)]" : undefined,
-            className,
-          )}
-          {...props}
-        />
-
-        {rightSlot ? (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted)]">
-            {rightSlot}
-          </div>
-        ) : null}
-      </div>
+      <input
+        id={inputId}
+        className={cn(
+          "h-11 w-full rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:bg-[var(--surface-elevated)]",
+          error ? "border-[var(--danger)]" : undefined,
+          className,
+        )}
+        {...props}
+      />
 
       {error ? (
         <p className="text-xs text-[var(--danger)]">{error}</p>

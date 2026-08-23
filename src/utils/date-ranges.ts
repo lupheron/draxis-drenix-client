@@ -1,59 +1,18 @@
 import { BUSINESS_TIMEZONE } from "@/utils/timezones";
-
-/** Business calendar timezone for DRAXIS Client (metrics / date filters). */
-export const APP_TIMEZONE = BUSINESS_TIMEZONE;
-export const APP_TIMEZONE_LABEL = "Central Time";
-
-export type DatePreset = "day" | "week" | "month" | "year" | "custom";
+import type { PerformancePeriod } from "@/lib/types";
 
 /** Calendar YYYY-MM-DD in America/Chicago. */
 export function formatDateInCentral(date: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {
-    timeZone: APP_TIMEZONE,
+    timeZone: BUSINESS_TIMEZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(date);
 }
 
-/** @deprecated Use formatDateInCentral — kept name for call sites. */
-export function formatDateInput(date: Date): string {
-  return formatDateInCentral(date);
-}
-
-export function getCentralParts(date: Date = new Date()): {
-  year: number;
-  month: number;
-  day: number;
-  hour: number;
-  minute: number;
-} {
-  const bag = Object.fromEntries(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: APP_TIMEZONE,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    })
-      .formatToParts(date)
-      .filter((part) => part.type !== "literal")
-      .map((part) => [part.type, part.value]),
-  ) as Record<string, string>;
-
-  return {
-    year: Number(bag.year),
-    month: Number(bag.month),
-    day: Number(bag.day),
-    hour: Number(bag.hour),
-    minute: Number(bag.minute),
-  };
-}
-
 /** Shift a YYYY-MM-DD calendar day by N days (timezone-safe date math). */
-export function addDaysToYmd(ymd: string, days: number): string {
+function addDaysToYmd(ymd: string, days: number): string {
   const [year, month, day] = ymd.split("-").map(Number);
   const utc = new Date(Date.UTC(year, month - 1, day + days, 12, 0, 0));
   const y = utc.getUTCFullYear();
@@ -63,7 +22,7 @@ export function addDaysToYmd(ymd: string, days: number): string {
 }
 
 /** 0 = Sunday … 6 = Saturday for a calendar YMD. */
-export function weekdayForYmd(ymd: string): number {
+function weekdayForYmd(ymd: string): number {
   const [year, month, day] = ymd.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day, 12, 0, 0)).getUTCDay();
 }
@@ -76,7 +35,7 @@ export function weekdayForYmd(ymd: string): number {
  * - year: Jan 1 of this CT year → today CT
  */
 export function getDateRangeForPreset(
-  preset: DatePreset,
+  preset: PerformancePeriod,
   custom?: { from: string; to: string },
 ): { from: string; to: string } {
   if (preset === "custom" && custom) {

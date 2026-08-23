@@ -7,15 +7,7 @@ type StatCardDefaultProps = {
   hint?: string;
   className?: string;
   style?: CSSProperties;
-  accent?:
-    | "teal"
-    | "slate"
-    | "sand"
-    | "green"
-    | "red"
-    | "blue"
-    | "orange"
-    | "gold";
+  accent?: "teal" | "green" | "red" | "blue" | "orange" | "gold";
 };
 
 const accents: Record<
@@ -26,16 +18,6 @@ const accents: Record<
     shell: "bg-[linear-gradient(145deg,#d5f0eb_0%,#f7fafc_55%)] border-[#9fd4cb]",
     label: "text-[var(--accent-strong)]",
     bar: "bg-[var(--accent)]",
-  },
-  slate: {
-    shell: "bg-[linear-gradient(145deg,#dbe7fb_0%,#f7fafc_55%)] border-[#93b4f0]",
-    label: "text-[#1d4ed8]",
-    bar: "bg-[#1d4ed8]",
-  },
-  sand: {
-    shell: "bg-[linear-gradient(145deg,#fde7d6_0%,#f7fafc_55%)] border-[#f0b27a]",
-    label: "text-[#ea580c]",
-    bar: "bg-[#ea580c]",
   },
   green: {
     shell: "bg-[linear-gradient(145deg,#d8f3e5_0%,#f7fafc_55%)] border-[#8dceb0]",

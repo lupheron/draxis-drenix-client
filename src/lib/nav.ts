@@ -33,6 +33,19 @@ export const PORTAL_NAV: NavItem[] = [
     ],
   },
   {
+    id: "attendance",
+    label: "Attendance",
+    href: "/attendance",
+    children: [
+      { id: "days", label: "Days", href: "/attendance" },
+      {
+        id: "requests",
+        label: "Requests",
+        href: "/attendance?view=requests",
+      },
+    ],
+  },
+  {
     id: "leads",
     label: "My Leads",
     href: "/leads",

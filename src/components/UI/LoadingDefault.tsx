@@ -50,3 +50,7 @@ export default function LoadingDefault({
     </div>
   );
 }
+
+export function PageSpinner({ label = "Loading" }: { label?: string }) {
+  return <LoadingDefault variant="page" label={label} />;
+}

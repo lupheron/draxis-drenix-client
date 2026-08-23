@@ -80,5 +80,3 @@ function firstErrorMessage(body: ApiErrorBody): string | undefined {
   }
   return undefined;
 }
-
-export { API_BASE_URL };

@@ -3,7 +3,13 @@ export const queryKeys = {
   metrics: (from: string, to: string) => ["me", "metrics", from, to] as const,
   dailyMetrics: (from: string, to: string) =>
     ["me", "metrics", "daily", from, to] as const,
-  leads: (from: string, to: string) => ["me", "leads", from, to] as const,
+  attendanceSummary: (from: string, to: string) =>
+    ["me", "attendance", "summary", from, to] as const,
+  attendanceDays: (from: string, to: string) =>
+    ["me", "attendance", "days", from, to] as const,
+  attendanceDay: (date: string) =>
+    ["me", "attendance", "day", date] as const,
+  attendanceRequests: ["me", "attendance", "requests"] as const,
   driverLeadsSearch: (
     company: string,
     params: { name?: string; phone?: string; email?: string } | null,

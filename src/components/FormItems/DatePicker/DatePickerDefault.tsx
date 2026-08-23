@@ -8,17 +8,10 @@ import "react-day-picker/style.css";
 
 type DatePickerDefaultProps = {
   label?: string;
-  hint?: string;
-  error?: string;
   value: string;
   onChange: (value: string) => void;
-  placeholder?: string;
-  required?: boolean;
-  disabled?: boolean;
   min?: string;
   max?: string;
-  className?: string;
-  wrapperClassName?: string;
   id?: string;
 };
 
@@ -34,17 +27,10 @@ function toIso(date: Date): string {
 
 export default function DatePickerDefault({
   label,
-  hint,
-  error,
   value,
   onChange,
-  placeholder = "Select date",
-  required,
-  disabled,
   min,
   max,
-  className,
-  wrapperClassName,
   id,
 }: DatePickerDefaultProps) {
   const autoId = useId();
@@ -77,37 +63,29 @@ export default function DatePickerDefault({
   }, [open]);
 
   return (
-    <div
-      ref={rootRef}
-      className={cn("relative flex flex-col gap-2", wrapperClassName)}
-    >
+    <div ref={rootRef} className="relative flex flex-col gap-2">
       {label ? (
         <label
           htmlFor={inputId}
           className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--muted-foreground)]"
         >
           {label}
-          {required ? <span className="text-[var(--danger)]"> *</span> : null}
         </label>
       ) : null}
 
       <button
         id={inputId}
         type="button"
-        disabled={disabled}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
         className={cn(
-          "flex h-11 w-full items-center justify-between rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 text-left text-sm outline-none transition-colors",
+          "flex h-11 w-full cursor-pointer items-center justify-between rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 text-left text-sm outline-none transition-colors",
           "hover:border-[var(--border-strong)] focus:border-[var(--accent)]",
-          error ? "border-[var(--danger)]" : undefined,
-          disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
-          className,
         )}
       >
         <span className={selected ? "text-[var(--foreground)]" : "text-[var(--muted)]"}>
-          {selected ? format(selected, "MMM d, yyyy") : placeholder}
+          {selected ? format(selected, "MMM d, yyyy") : "Select date"}
         </span>
         <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)]">
           Date
@@ -134,12 +112,6 @@ export default function DatePickerDefault({
             ]}
           />
         </div>
-      ) : null}
-
-      {error ? (
-        <p className="text-xs text-[var(--danger)]">{error}</p>
-      ) : hint ? (
-        <p className="text-xs text-[var(--muted)]">{hint}</p>
       ) : null}
     </div>
   );

@@ -6,7 +6,6 @@ import { employeeLogin, employeeLogout } from "@/lib/api/auth";
 import {
   changeMyPassword,
   fetchMyDailyMetrics,
-  fetchMyLeads,
   fetchMyMetrics,
   fetchMyProfile,
 } from "@/lib/api/me";
@@ -66,14 +65,6 @@ export function useMyDailyMetrics(from: string, to: string) {
     queryKey: queryKeys.dailyMetrics(from, to),
     queryFn: () => fetchMyDailyMetrics(from, to),
     enabled: authStorage.isAuthenticated() && Boolean(from && to),
-  });
-}
-
-export function useMyLeads(from: string, to: string) {
-  return useQuery({
-    queryKey: queryKeys.leads(from, to),
-    queryFn: () => fetchMyLeads(from, to),
-    enabled: authStorage.isAuthenticated() && authStorage.isHr() && Boolean(from && to),
   });
 }
 

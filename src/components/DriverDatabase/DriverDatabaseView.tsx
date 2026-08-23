@@ -89,39 +89,62 @@ function DetailField({
 }
 
 function HistoryCard({ record }: { record: DriverLeadRecord }) {
-  const columnEntries = Object.entries(record.columns ?? {}).filter(
+  const extras = Object.entries(record.extra_columns ?? {}).filter(
     ([, value]) => value?.trim(),
   );
   const statusFromProcess = record.status_source;
+  const placement =
+    record.placement === "current"
+      ? "Current desk"
+      : record.placement === "previous"
+        ? "Earlier desk"
+        : record.placement === "process"
+          ? "Process board"
+          : null;
+  const callsLabel = record.calls_label ?? (record.calls != null ? String(record.calls) : null);
 
   return (
     <article className="animate-rise rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 shadow-[var(--shadow-soft)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-medium text-[var(--foreground)]">{record.board_name}</p>
+          {placement ? (
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+              {placement}
+            </p>
+          ) : null}
+          <p className="mt-1 font-medium text-[var(--foreground)]">
+            {record.owner ? `${record.owner} · ${record.board_name}` : record.board_name}
+          </p>
           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-            {record.group_title} · {record.status}
+            {record.group_title}
+            {record.moved_to && record.board_owner !== record.moved_to
+              ? ` · moved to ${record.moved_to}`
+              : null}
           </p>
           {statusFromProcess ? (
             <p className="mt-1 text-xs text-[var(--muted)]">
               Status from {statusFromProcess.board_name}
-              {record.board_status
-                ? ` · board group was ${record.board_status}`
-                : null}
             </p>
           ) : null}
         </div>
-        <StatusBadge statusKey={record.status_key} label={record.status} />
+        <div className="flex flex-wrap items-center gap-2">
+          {callsLabel ? (
+            <span className="inline-flex rounded-full border border-[#93b4f0] bg-[#dbe7fb] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#1d4ed8]">
+              {callsLabel === "1" ? "1 call" : `${callsLabel} calls`}
+            </span>
+          ) : null}
+          <StatusBadge statusKey={record.status_key} label={record.status} />
+        </div>
       </div>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <DetailField label="Name" value={record.name} />
         <DetailField label="Phone" value={record.phone} />
         <DetailField label="Email" value={record.email} />
-        <DetailField label="Recruiter" value={record.recruiter} />
         <DetailField label="State" value={record.state} />
         <DetailField label="Platform" value={record.platform} />
         <DetailField label="Position" value={record.position} />
+        <DetailField label="CDL" value={record.got_cdl} />
         <DetailField label="Applied" value={formatDate(record.applied_on)} />
         <DetailField label="Contacted" value={formatDate(record.contacted_on)} />
       </div>
@@ -137,13 +160,13 @@ function HistoryCard({ record }: { record: DriverLeadRecord }) {
         </div>
       ) : null}
 
-      {columnEntries.length > 0 ? (
+      {extras.length > 0 ? (
         <div className="mt-4 border-t border-[var(--border)] pt-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-            Columns
+            More
           </p>
           <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-            {columnEntries.map(([key, value]) => (
+            {extras.map(([key, value]) => (
               <div key={key}>
                 <dt className="text-[10px] uppercase tracking-[0.14em] text-[var(--muted)]">
                   {key}
@@ -160,6 +183,9 @@ function HistoryCard({ record }: { record: DriverLeadRecord }) {
 
 function SearchResultGroup({ group }: { group: DriverLeadSearchGroup }) {
   const [open, setOpen] = useState(true);
+  const trail = group.ownership ?? [];
+  const callsLabel =
+    group.calls_label ?? (group.calls != null ? String(group.calls) : null);
 
   return (
     <section className="animate-rise overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]/90 shadow-[var(--shadow-soft)]">
@@ -175,9 +201,31 @@ function SearchResultGroup({ group }: { group: DriverLeadSearchGroup }) {
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             {[group.phone, group.email].filter(Boolean).join(" · ") || "No contact"}
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {group.current_owner ? (
+              <span className="rounded-full bg-[#dbe7fb] px-2.5 py-0.5 text-[11px] font-semibold text-[#1d4ed8]">
+                Now: {group.current_owner}
+              </span>
+            ) : null}
+            {group.origin_owner &&
+            group.current_owner &&
+            group.origin_owner.toLowerCase() !== group.current_owner.toLowerCase() ? (
+              <span className="rounded-full bg-[#fde7d6] px-2.5 py-0.5 text-[11px] font-semibold text-[#ea580c]">
+                First: {group.origin_owner}
+              </span>
+            ) : null}
+            {trail.length > 1 ? (
+              <span className="text-xs text-[var(--muted-foreground)]">
+                {trail.map((step) => step.owner).join(" → ")}
+              </span>
+            ) : null}
+            {callsLabel ? (
+              <span className="rounded-full bg-[#d8f3e5] px-2.5 py-0.5 text-[11px] font-semibold text-[#15803d]">
+                {callsLabel === "1" ? "1 HR call" : `${callsLabel} HR calls`}
+              </span>
+            ) : null}
             <span className="text-xs text-[var(--muted)]">
-              {group.application_count} application
+              {group.application_count} board
               {group.application_count === 1 ? "" : "s"}
             </span>
             {group.statuses.map((status) => (
@@ -213,7 +261,10 @@ function BrowseRow({ record }: { record: DriverLeadRecord }) {
         <StatusBadge statusKey={record.status_key} label={record.status} />
       </td>
       <td className="px-4 py-3 text-[var(--muted-foreground)]">{record.board_name}</td>
-      <td className="px-4 py-3 text-[var(--muted-foreground)]">{record.recruiter ?? "—"}</td>
+      <td className="px-4 py-3 text-[var(--muted-foreground)]">{record.owner ?? record.recruiter ?? "—"}</td>
+      <td className="px-4 py-3 text-[var(--muted-foreground)]">
+        {record.calls_label ?? (record.calls != null ? String(record.calls) : "—")}
+      </td>
       <td className="px-4 py-3 text-[var(--muted-foreground)]">{record.state ?? "—"}</td>
       <td className="px-4 py-3 text-[var(--muted-foreground)]">
         {formatDate(record.applied_on)}
@@ -493,7 +544,8 @@ export default function DriverDatabaseView() {
                         "Email",
                         "Status",
                         "Board",
-                        "Recruiter",
+                        "Owner",
+                        "Calls",
                         "State",
                         "Applied",
                       ].map((header) => (

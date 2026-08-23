@@ -54,29 +54,6 @@ export type MeMetricsResponse = EmployeeMetrics & {
   to: string;
 };
 
-export type LeadStatus =
-  | "new"
-  | "follow_up"
-  | "hired"
-  | "loaded"
-  | "rejected"
-  | string;
-
-export type ClientLead = {
-  id: number | string;
-  title?: string | null;
-  name?: string | null;
-  company_name?: string | null;
-  status: LeadStatus;
-  follow_up_at?: string | null;
-  hired_at?: string | null;
-  loaded_at?: string | null;
-  rejected_at?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  notes?: string | null;
-};
-
 export type ApiEnvelope<T> = {
   data: T;
   message?: string;
@@ -116,9 +93,22 @@ export type DriverLeadRecord = {
   position: string | null;
   state: string | null;
   recruiter: string | null;
+  board_owner?: string | null;
+  owner?: string | null;
+  moved_to?: string | null;
+  calls?: number | null;
+  calls_label?: string | null;
+  got_cdl?: string | null;
+  placement?: "current" | "previous" | "process" | string;
   applied_on: string | null;
   contacted_on: string | null;
-  columns: Record<string, string | null>;
+  extra_columns?: Record<string, string | null>;
+  columns?: Record<string, string | null>;
+};
+
+export type DriverLeadOwnershipStep = {
+  owner: string;
+  role: "first" | "current" | "desk" | string;
 };
 
 export type DriverLeadSearchGroup = {
@@ -127,6 +117,11 @@ export type DriverLeadSearchGroup = {
   email: string | null;
   application_count: number;
   statuses: string[];
+  current_owner?: string | null;
+  origin_owner?: string | null;
+  ownership?: DriverLeadOwnershipStep[];
+  calls?: number | null;
+  calls_label?: string | null;
   history: DriverLeadRecord[];
 };
 
@@ -148,4 +143,92 @@ export type DriverLeadsBrowseMeta = {
 export type DriverLeadsBrowseResponse = {
   data: DriverLeadRecord[];
   meta: DriverLeadsBrowseMeta;
+};
+
+export type AttendanceStatus =
+  | "present"
+  | "late"
+  | "no_show"
+  | "break"
+  | "missing_punch"
+  | "excused"
+  | "pending_review"
+  | null;
+
+export type AttendanceEventType =
+  | "check_in"
+  | "check_out"
+  | "break"
+  | string;
+
+export type AttendanceEvent = {
+  id: number;
+  type: AttendanceEventType;
+  occurred_at: string;
+  source?: string | null;
+};
+
+export type AttendanceDay = {
+  id: number;
+  date: string;
+  status: AttendanceStatus | string;
+  check_in_at: string | null;
+  check_out_at: string | null;
+  break_at?: string | null;
+  late_minutes: number;
+  shift_start?: string | null;
+  shift_end?: string | null;
+  sheet_note?: string | null;
+  admin_note?: string | null;
+  is_manual_override?: boolean;
+  events?: AttendanceEvent[];
+};
+
+export type AttendanceSummary = {
+  from: string;
+  to: string;
+  timezone: string;
+  today: {
+    date: string;
+    status: AttendanceStatus | string;
+    check_in_at: string | null;
+    check_out_at: string | null;
+    late_minutes: number;
+    notes: string | null;
+  };
+  period: {
+    present_days: number;
+    late_days: number;
+    no_show_days: number;
+    excused_days: number;
+    break_days: number;
+    pending_requests: number;
+  };
+};
+
+export type AttendanceRequestType = "dispute" | "absence";
+
+export type AttendanceRequestStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "resolved";
+
+export type AttendanceRequest = {
+  id: number;
+  type: AttendanceRequestType | string;
+  status: AttendanceRequestStatus | string;
+  date: string;
+  message: string;
+  admin_comment?: string | null;
+  created_at?: string | null;
+  resolved_at?: string | null;
+  related_day_id?: number | null;
+};
+
+export type CreateAttendanceRequestInput = {
+  type: AttendanceRequestType;
+  date: string;
+  message: string;
+  related_day_id?: number;
 };

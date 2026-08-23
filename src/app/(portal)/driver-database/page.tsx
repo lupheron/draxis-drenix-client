@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import RequireAuth from "@/components/Auth/RequireAuth";
 import DriverDatabaseView from "@/components/DriverDatabase/DriverDatabaseView";
-import { PageSpinner } from "@/components/UI/SkeletonDefault";
+import { PageSpinner } from "@/components/UI/LoadingDefault";
 
 export default function DriverDatabasePage() {
   return (

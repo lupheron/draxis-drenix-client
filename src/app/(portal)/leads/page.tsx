@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import RequireAuth from "@/components/Auth/RequireAuth";
 import LeadsView from "@/components/Leads/LeadsView";
-import { PageSpinner } from "@/components/UI/SkeletonDefault";
+import { PageSpinner } from "@/components/UI/LoadingDefault";
 
 export default function LeadsPage() {
   return (

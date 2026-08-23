@@ -1,6 +1,5 @@
 /** Business calendar + display clocks: America/Chicago (Central Time). */
 export const BUSINESS_TIMEZONE = "America/Chicago";
-export const BUSINESS_TIMEZONE_LABEL = "Central Time";
 
 /** Desk sits in Tashkent; shift hours are defined here, then shown in CT. */
 export const DESK_TIMEZONE = "Asia/Tashkent";

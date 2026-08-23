@@ -1,6 +1,6 @@
 import type { ChartOptions } from "chart.js";
 
-/** High-contrast pairs: red/blue, orange/green, gold/navy. */
+/** High-contrast pairs: red/blue, orange/green, gold. */
 export const chartColors = {
   red: "#c1121f",
   redSoft: "rgba(193, 18, 31, 0.16)",
@@ -12,14 +12,9 @@ export const chartColors = {
   greenSoft: "rgba(21, 128, 61, 0.14)",
   gold: "#ca8a04",
   goldSoft: "rgba(202, 138, 4, 0.16)",
-  navy: "#0f3d6e",
-  navySoft: "rgba(15, 61, 110, 0.12)",
   teal: "#1a6f66",
-  tealSoft: "rgba(26, 111, 102, 0.14)",
   slate: "#1d4ed8",
-  slateSoft: "rgba(29, 78, 216, 0.14)",
   sand: "#ea580c",
-  sandSoft: "rgba(234, 88, 12, 0.16)",
   muted: "#6a7c89",
   grid: "rgba(180, 196, 207, 0.35)",
 };

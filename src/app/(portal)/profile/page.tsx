@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import ProfileView from "@/components/Profile/ProfileView";
-import { PageSpinner } from "@/components/UI/SkeletonDefault";
+import { PageSpinner } from "@/components/UI/LoadingDefault";
 
 export default function ProfilePage() {
   return (
