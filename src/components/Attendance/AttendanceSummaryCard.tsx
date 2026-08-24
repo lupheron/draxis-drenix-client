@@ -10,6 +10,7 @@ import {
   formatAttendanceTime,
 } from "@/utils/attendance";
 import { cn } from "@/lib/cn";
+import { DESK_TIMEZONE } from "@/utils/timezones";
 
 type AttendanceSummaryCardProps = {
   from: string;
@@ -27,6 +28,7 @@ export default function AttendanceSummaryCard({
   const todayTone = attendanceStatusTone(
     summary?.today.status,
     summary?.today.late_minutes ?? 0,
+    Boolean(summary?.today.check_in_at),
   );
 
   const errorMessage =
@@ -90,11 +92,20 @@ export default function AttendanceSummaryCard({
               {attendanceStatusLabel(
                 summary.today.status,
                 summary.today.late_minutes,
+                Boolean(summary.today.check_in_at),
               )}
             </p>
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              In {formatAttendanceTime(summary.today.check_in_at, "tashkent")} ·
-              Out {formatAttendanceTime(summary.today.check_out_at, "tashkent")}
+              In{" "}
+              {formatAttendanceTime(
+                summary.today.check_in_at,
+                DESK_TIMEZONE,
+              )}{" "}
+              · Out{" "}
+              {formatAttendanceTime(
+                summary.today.check_out_at,
+                DESK_TIMEZONE,
+              )}
               {summary.today.late_minutes > 0
                 ? ` · ${summary.today.late_minutes}m late`
                 : ""}

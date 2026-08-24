@@ -1,55 +1,68 @@
-import type { AttendanceStatus } from "@/lib/types";
+/**
+ * Attendance display — mirrors Admin `attendance-display.ts`.
+ *
+ * Contract (backend):
+ * - Time Local = Face ID wall at Asia/Tashkent → stored as real UTC
+ * - Shift Date = sheet column F (overnight 18:00→03:00 stays on start day)
+ * - Break is an event type only — never a day badge
+ *
+ * If production still has pre-fix rows (Time Local parsed as Chicago), clocks
+ * will look wrong on BOTH Admin and Client until attendance is re-synced.
+ */
+import type { AttendanceDay, AttendanceEvent, AttendanceStatus } from "@/lib/types";
 import { BUSINESS_TIMEZONE, DESK_TIMEZONE } from "@/utils/timezones";
 
-/** How punch clocks are shown in the Client Portal. */
-export type AttendanceClockZone = "tashkent" | "central";
+export type AttendanceClockZone = typeof DESK_TIMEZONE | typeof BUSINESS_TIMEZONE;
 
-/**
- * Format attendance punch times.
- * Backend stores occurred_at / check_* as real UTC (Time Local parsed as Asia/Tashkent).
- * Toggle only changes the display zone — Shift Date labels stay as sheet shift dates.
- */
+export const ATTENDANCE_CLOCK_ZONES: AttendanceClockZone[] = [
+  DESK_TIMEZONE,
+  BUSINESS_TIMEZONE,
+];
+
+export function attendanceClockZoneLabel(zone: AttendanceClockZone): string {
+  return zone === DESK_TIMEZONE ? "Tashkent (Face ID)" : "US Central";
+}
+
+/** Format UTC ISO punch as wall clock in the selected zone (same as Admin). */
 export function formatAttendanceTime(
   value: string | null | undefined,
-  zone: AttendanceClockZone = "tashkent",
+  zone: AttendanceClockZone = DESK_TIMEZONE,
 ): string {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
-
   return new Intl.DateTimeFormat("en-US", {
-    timeZone: zone === "tashkent" ? DESK_TIMEZONE : BUSINESS_TIMEZONE,
+    timeZone: zone,
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
   }).format(date);
 }
 
-export function attendanceClockZoneLabel(zone: AttendanceClockZone): string {
-  return zone === "tashkent" ? "Tashkent (Face ID)" : "US Central";
-}
-
 /**
- * Day badges: never surface "break".
- * Break is an event type only — map to Checked in (matches Admin).
- * Late when status is late OR late_minutes > 0 (unless excused / no_show).
+ * Day badges: Checked in | Late | No show | Excused | Pending review.
+ * Never Break. Aligns with Admin resolveDisplayDayStatus.
  */
 export function attendanceDisplayStatus(
   status: AttendanceStatus | string | null | undefined,
   lateMinutes = 0,
+  hasCheckIn = false,
 ): string {
-  if (!status) return "pending_review";
+  if (!status && !hasCheckIn && lateMinutes <= 0) return "pending_review";
   if (status === "no_show") return "no_show";
   if (status === "excused") return "excused";
+  if (status === "pending_review" || status === "missing_punch") {
+    return "pending_review";
+  }
   if (status === "late" || lateMinutes > 0) return "late";
   if (
     status === "break" ||
-    status === "missing_punch" ||
-    status === "present"
+    status === "present" ||
+    hasCheckIn
   ) {
     return "present";
   }
-  return status;
+  return status || "pending_review";
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -57,7 +70,7 @@ const STATUS_LABELS: Record<string, string> = {
   late: "Late",
   no_show: "No show",
   break: "Checked in",
-  missing_punch: "Checked in",
+  missing_punch: "Pending review",
   excused: "Excused",
   pending_review: "Pending review",
 };
@@ -65,16 +78,18 @@ const STATUS_LABELS: Record<string, string> = {
 export function attendanceStatusLabel(
   status: AttendanceStatus | string | null | undefined,
   lateMinutes = 0,
+  hasCheckIn = false,
 ): string {
-  const display = attendanceDisplayStatus(status, lateMinutes);
+  const display = attendanceDisplayStatus(status, lateMinutes, hasCheckIn);
   return STATUS_LABELS[display] ?? display.replaceAll("_", " ");
 }
 
 export function attendanceStatusTone(
   status: AttendanceStatus | string | null | undefined,
   lateMinutes = 0,
+  hasCheckIn = false,
 ): { bg: string; text: string; border: string } {
-  switch (attendanceDisplayStatus(status, lateMinutes)) {
+  switch (attendanceDisplayStatus(status, lateMinutes, hasCheckIn)) {
     case "present":
       return {
         bg: "bg-[#d8f3e5]",
@@ -128,22 +143,65 @@ export function formatAttendanceDate(value: string | null | undefined): string {
   }).format(date);
 }
 
-/** Employee day detail: check-in / check-out only (breaks stay on Admin). */
-export function isAttendanceCheckPunch(
-  type: string | null | undefined,
-): boolean {
-  const t = String(type ?? "").toLowerCase();
-  return (
-    t === "check_in" ||
-    t === "check_out" ||
-    t === "checked_in" ||
-    t === "checked_out"
-  );
+export function eventKind(
+  event: Pick<AttendanceEvent, "type" | "event_kind" | "action">,
+): string {
+  if (event.event_kind) return String(event.event_kind).toLowerCase();
+  if (event.type) return String(event.type).toLowerCase();
+  const action = String(event.action ?? "").toLowerCase();
+  if (action.includes("break")) return "break";
+  if (/check.?in|checked in|entered/.test(action)) return "check_in";
+  if (/check.?out|checked out|exit/.test(action)) return "check_out";
+  return "other";
 }
 
-export function attendancePunchLabel(type: string | null | undefined): string {
-  const t = String(type ?? "").toLowerCase();
-  if (t === "check_in" || t === "checked_in") return "Check in";
-  if (t === "check_out" || t === "checked_out") return "Check out";
-  return String(type ?? "Punch").replaceAll("_", " ");
+export function isAttendanceCheckPunch(
+  event: string | Pick<AttendanceEvent, "type" | "event_kind" | "action"> | null | undefined,
+): boolean {
+  if (event == null) return false;
+  const kind =
+    typeof event === "string" ? event.toLowerCase() : eventKind(event);
+  return kind === "check_in" || kind === "check_out";
+}
+
+export function attendancePunchLabel(
+  event: string | Pick<AttendanceEvent, "type" | "event_kind" | "action"> | null | undefined,
+): string {
+  if (event == null) return "Punch";
+  const kind =
+    typeof event === "string" ? event.toLowerCase() : eventKind(event);
+  if (kind === "check_in") return "Check in";
+  if (kind === "check_out") return "Check out";
+  return kind.replaceAll("_", " ");
+}
+
+/**
+ * Prefer first check-in + last check-out from events (Admin parseDayEvents),
+ * falling back to day aggregate fields.
+ */
+export function resolveDayPunches(day: AttendanceDay): {
+  checkInAt: string | null;
+  checkOutAt: string | null;
+  shiftWindow: string | null;
+} {
+  const events = day.events ?? [];
+  const checkIns = events.filter((e) => eventKind(e) === "check_in");
+  const checkOuts = events.filter((e) => eventKind(e) === "check_out");
+
+  const checkInAt =
+    checkIns[0]?.occurred_at ?? day.check_in_at ?? null;
+  const checkOutAt =
+    checkOuts.length > 0
+      ? checkOuts[checkOuts.length - 1]?.occurred_at ?? null
+      : day.check_out_at ?? null;
+
+  const shiftWindow =
+    day.shift_start ||
+    day.shift ||
+    checkIns[0]?.shift ||
+    checkOuts[0]?.shift ||
+    day.shift_end ||
+    null;
+
+  return { checkInAt, checkOutAt, shiftWindow };
 }

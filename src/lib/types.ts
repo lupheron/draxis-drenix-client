@@ -164,7 +164,12 @@ export type AttendanceEventType =
 export type AttendanceEvent = {
   id: number;
   type: AttendanceEventType;
+  event_kind?: "check_in" | "check_out" | "break" | "other" | string;
+  action?: string | null;
   occurred_at: string;
+  shift?: string | null;
+  late_minutes?: number | null;
+  sheet_note?: string | null;
   source?: string | null;
 };
 
@@ -178,6 +183,8 @@ export type AttendanceDay = {
   late_minutes: number;
   shift_start?: string | null;
   shift_end?: string | null;
+  /** Sheet Shift Time window (e.g. 08:00 - 17:00 CT). */
+  shift?: string | null;
   sheet_note?: string | null;
   admin_note?: string | null;
   is_manual_override?: boolean;
