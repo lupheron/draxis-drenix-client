@@ -7,6 +7,7 @@ import LoadingDefault from "@/components/UI/LoadingDefault";
 import {
   attendanceStatusLabel,
   attendanceStatusTone,
+  effectiveLateMinutes,
   formatAttendanceTime,
 } from "@/utils/attendance";
 import { cn } from "@/lib/cn";
@@ -106,8 +107,8 @@ export default function AttendanceSummaryCard({
                 summary.today.check_out_at,
                 DESK_TIMEZONE,
               )}
-              {summary.today.late_minutes > 0
-                ? ` · ${summary.today.late_minutes}m late`
+              {effectiveLateMinutes(summary.today.late_minutes) > 0
+                ? ` · ${effectiveLateMinutes(summary.today.late_minutes)}m late`
                 : ""}
             </p>
           </div>

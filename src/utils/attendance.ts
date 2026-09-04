@@ -42,7 +42,17 @@ export function formatAttendanceTime(
 /**
  * Day badges: Checked in | Late | No show | Excused | Pending review.
  * Never Break. Aligns with Admin resolveDisplayDayStatus.
+ *
+ * Grace: arriving within LATE_GRACE_MINUTES after shift start counts as on time.
  */
+export const LATE_GRACE_MINUTES = 10;
+
+/** Minutes past grace used for “late” display (0 = on time). */
+export function effectiveLateMinutes(lateMinutes = 0): number {
+  const minutes = Math.max(0, Number(lateMinutes) || 0);
+  return minutes > LATE_GRACE_MINUTES ? minutes : 0;
+}
+
 export function attendanceDisplayStatus(
   status: AttendanceStatus | string | null | undefined,
   lateMinutes = 0,
@@ -54,10 +64,14 @@ export function attendanceDisplayStatus(
   if (status === "pending_review" || status === "missing_punch") {
     return "pending_review";
   }
-  if (status === "late" || lateMinutes > 0) return "late";
+  const late = effectiveLateMinutes(lateMinutes);
+  if (late > 0 || (status === "late" && lateMinutes > LATE_GRACE_MINUTES)) {
+    return "late";
+  }
   if (
     status === "break" ||
     status === "present" ||
+    status === "late" ||
     hasCheckIn
   ) {
     return "present";

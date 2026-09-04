@@ -28,6 +28,7 @@ import {
   attendancePunchLabel,
   attendanceStatusLabel,
   attendanceStatusTone,
+  effectiveLateMinutes,
   formatAttendanceDate,
   formatAttendanceTime,
   isAttendanceCheckPunch,
@@ -341,8 +342,8 @@ export default function AttendanceView() {
                                 punches.checkOutAt,
                                 clockZone,
                               )}
-                              {day.late_minutes > 0
-                                ? ` · ${day.late_minutes}m late`
+                              {effectiveLateMinutes(day.late_minutes) > 0
+                                ? ` · ${effectiveLateMinutes(day.late_minutes)}m late`
                                 : ""}
                             </p>
                           </div>
@@ -629,7 +630,11 @@ function DayDetailPanel({
         />
         <DetailItem
           label="Late"
-          value={day.late_minutes > 0 ? `${day.late_minutes} min` : "—"}
+          value={
+            effectiveLateMinutes(day.late_minutes) > 0
+              ? `${effectiveLateMinutes(day.late_minutes)} min`
+              : "—"
+          }
         />
         <DetailItem
           label="Shift window"
