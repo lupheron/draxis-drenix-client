@@ -12,6 +12,8 @@ import {
   PointElement,
   Tooltip,
 } from "chart.js";
+import { useSearchParams } from "next/navigation";
+import LeadsTableView from "@/components/Leads/LeadsTableView";
 import EmptyStateDefault from "@/components/UI/EmptyStateDefault";
 import LoadingDefault from "@/components/UI/LoadingDefault";
 import { PeriodControls, usePeriodRange } from "@/components/UI/PeriodControls";
@@ -32,6 +34,17 @@ ChartJS.register(
 );
 
 export default function LeadsView() {
+  const searchParams = useSearchParams();
+  const view = searchParams.get("view") ?? "overview";
+
+  if (view === "table") {
+    return <LeadsTableView />;
+  }
+
+  return <LeadsOverview />;
+}
+
+function LeadsOverview() {
   const { period, setPeriod, custom, setCustom, range } = usePeriodRange("month");
   const dailyQuery = useMyDailyMetrics(range.from, range.to);
   const totalsQuery = useMyMetrics(range.from, range.to);
@@ -59,8 +72,9 @@ export default function LeadsView() {
           Pipeline statistics
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--muted-foreground)]">
-          Counts and trends for leads attributed to you. Individual records stay
-          in Admin.
+          Counts and trends for leads attributed to you. Open{" "}
+          <span className="font-medium text-[var(--foreground)]">Leads table</span>{" "}
+          for your Monday New / Follow up boards.
         </p>
       </section>
 

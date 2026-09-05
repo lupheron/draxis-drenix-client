@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import ButtonDefault from "@/components/Button/ButtonDefault";
 import InputDefault from "@/components/FormItems/Input/InputDefault";
 import SelectDefault from "@/components/FormItems/Select/SelectDefault";
+import LeadSocialVerifier from "@/components/Leads/LeadSocialVerifier";
 import EmptyStateDefault from "@/components/UI/EmptyStateDefault";
 import LoadingDefault from "@/components/UI/LoadingDefault";
 import {
@@ -21,6 +22,7 @@ import type {
   DriverLeadSearchGroup,
   DriverLeadStatusKey,
 } from "@/lib/types";
+import { isValidPhoneForVerification, whatsAppChatUrl } from "@/utils/phone";
 
 const STATUS_OPTIONS: { value: DriverLeadStatusKey | ""; label: string }[] = [
   { value: "", label: "All statuses" },
@@ -67,6 +69,24 @@ function StatusBadge({ statusKey, label }: { statusKey: string; label: string })
     >
       {label}
     </span>
+  );
+}
+
+function PhoneLink({ phone }: { phone: string | null | undefined }) {
+  if (!phone?.trim()) return <span>—</span>;
+  if (!isValidPhoneForVerification(phone)) {
+    return <span>{phone}</span>;
+  }
+  return (
+    <a
+      href={whatsAppChatUrl(phone)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-[var(--accent-strong)] underline-offset-2 hover:underline"
+      title="Open in WhatsApp"
+    >
+      {phone}
+    </a>
   );
 }
 
@@ -139,7 +159,14 @@ function HistoryCard({ record }: { record: DriverLeadRecord }) {
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <DetailField label="Name" value={record.name} />
-        <DetailField label="Phone" value={record.phone} />
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+            Phone
+          </p>
+          <p className="mt-1 text-sm text-[var(--foreground)]">
+            <PhoneLink phone={record.phone} />
+          </p>
+        </div>
         <DetailField label="Email" value={record.email} />
         <DetailField label="State" value={record.state} />
         <DetailField label="Platform" value={record.platform} />
@@ -147,6 +174,10 @@ function HistoryCard({ record }: { record: DriverLeadRecord }) {
         <DetailField label="CDL" value={record.got_cdl} />
         <DetailField label="Applied" value={formatDate(record.applied_on)} />
         <DetailField label="Contacted" value={formatDate(record.contacted_on)} />
+      </div>
+
+      <div className="mt-4 border-t border-[var(--border)] pt-4">
+        <LeadSocialVerifier phone={record.phone} />
       </div>
 
       {record.notes?.trim() ? (
@@ -240,6 +271,10 @@ function SearchResultGroup({ group }: { group: DriverLeadSearchGroup }) {
         <span className="text-xs text-[var(--muted)]">{open ? "▾" : "▸"}</span>
       </button>
 
+      <div className="border-t border-[var(--border)] px-5 py-3">
+        <LeadSocialVerifier phone={group.phone} compact />
+      </div>
+
       {open ? (
         <div className="space-y-3 border-t border-[var(--border)] px-5 py-4">
           {group.history.map((record) => (
@@ -255,7 +290,12 @@ function BrowseRow({ record }: { record: DriverLeadRecord }) {
   return (
     <tr className="border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--accent-dim)]/60">
       <td className="px-4 py-3 font-medium text-[var(--foreground)]">{record.name}</td>
-      <td className="px-4 py-3 text-[var(--muted-foreground)]">{record.phone ?? "—"}</td>
+      <td className="px-4 py-3 text-[var(--muted-foreground)]">
+        <div className="space-y-2">
+          <PhoneLink phone={record.phone} />
+          <LeadSocialVerifier phone={record.phone} compact />
+        </div>
+      </td>
       <td className="px-4 py-3 text-[var(--muted-foreground)]">{record.email ?? "—"}</td>
       <td className="px-4 py-3">
         <StatusBadge statusKey={record.status_key} label={record.status} />

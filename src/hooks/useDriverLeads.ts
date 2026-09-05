@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  browseAllMyDriverLeads,
   browseMyDriverLeads,
   searchMyDriverLeads,
   type DriverLeadSearchParams,
@@ -39,5 +40,29 @@ export function useMyDriverLeadsBrowse(params: DriverLeadsBrowseParams) {
       per_page: params.per_page,
     }),
     queryFn: () => browseMyDriverLeads(params),
+  });
+}
+
+export function useMyDriverLeadsBoard(params: {
+  company?: string;
+  board: string;
+  enabled?: boolean;
+}) {
+  const company = params.company ?? "JM";
+  const board = params.board.trim();
+
+  return useQuery({
+    queryKey: queryKeys.driverLeadsBrowse({
+      company,
+      board,
+      page: 0,
+      per_page: 0,
+    }),
+    queryFn: () =>
+      browseAllMyDriverLeads({
+        company,
+        board,
+      }),
+    enabled: (params.enabled ?? true) && Boolean(board),
   });
 }

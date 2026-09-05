@@ -1,6 +1,7 @@
 import { apiRequest } from "@/lib/api/client";
 import type {
   CompanyCode,
+  DriverLeadRecord,
   DriverLeadSearchResponse,
   DriverLeadsBrowseResponse,
   DriverLeadStatusKey,
@@ -57,4 +58,27 @@ export async function browseMyDriverLeads(
       per_page: params.per_page ?? 50,
     })}`,
   );
+}
+
+/** Fetch every page so no lead on the board is missed. */
+export async function browseAllMyDriverLeads(
+  params: Omit<DriverLeadsBrowseParams, "page" | "per_page">,
+): Promise<DriverLeadRecord[]> {
+  const perPage = 100;
+  let page = 1;
+  let lastPage = 1;
+  const rows: DriverLeadRecord[] = [];
+
+  do {
+    const response = await browseMyDriverLeads({
+      ...params,
+      page,
+      per_page: perPage,
+    });
+    rows.push(...response.data);
+    lastPage = Math.max(1, response.meta.last_page ?? 1);
+    page += 1;
+  } while (page <= lastPage);
+
+  return rows;
 }

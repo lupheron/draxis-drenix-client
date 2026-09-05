@@ -50,7 +50,10 @@ export const PORTAL_NAV: NavItem[] = [
     label: "My Leads",
     href: "/leads",
     hrOnly: true,
-    children: [{ id: "overview", label: "Overview", href: "/leads" }],
+    children: [
+      { id: "overview", label: "Overview", href: "/leads" },
+      { id: "table", label: "Leads table", href: "/leads?view=table" },
+    ],
   },
   {
     id: "driver-database",
